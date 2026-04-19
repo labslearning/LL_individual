@@ -200,7 +200,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 if config('RAILWAY_ENVIRONMENT', default='') != '':
         DEBUG = False
         ALLOWED_HOSTS = ['*']
-        CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app']
+        CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app', "https://web-production-e3cbe.up.railway.app",]
 else:
         # En local, respetamos lo que diga el .env o True por defecto
         DEBUG = config('DEBUG', default=True, cast=bool)

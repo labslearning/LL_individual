@@ -36,4 +36,5 @@ COPY . .
 
 RUN python manage.py collectstatic --noinput
 
-CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "djangocrud.asgi:application"]
+#CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "djangocrud.asgi:application"]
+CMD daphne -b 0.0.0.0 -p $PORT djangocrud.asgi:application
