@@ -1,0 +1,1694 @@
+{% extends "base.html" %}
+{% load note_filters %}
+{% load custom_filters %}
+{% load static %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<div class="lms-app-ecosystem pb-5 mb-5" id="lmsCoreContainer">
+    
+    <div class="app-top-bar d-flex justify-content-between align-items-center p-3 d-md-none omni-glass-panel sticky-top z-index-1000">
+        <div class="d-flex align-items-center gap-2">
+            <div class="avatar-micro-pulse">
+                <div class="avatar-ring-sm bg-gradient-aurora text-white rounded-circle d-flex justify-content-center align-items-center fw-black shadow-sm" style="width: 38px; height: 38px; font-size: 1rem;">
+                    {{ estudiante.username|slice:":1"|upper }}
+                </div>
+            </div>
+            <div class="d-flex flex-column lh-1">
+                <span class="text-muted-ultralight fs-9 tracking-widest text-uppercase fw-bold">ID Operativo</span>
+                <span class="text-dark-omni fw-black fs-7">{{ estudiante.username }}</span>
+            </div>
+        </div>
+        <div class="app-actions d-flex gap-2">
+            <button class="btn btn-icon-app position-relative">
+                <i class="fas fa-bell text-dark-omni fs-5"></i>
+                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle animate__animated animate__pulse animate__infinite">
+                    <span class="visually-hidden">Nuevas alertas</span>
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <div class="container-fluid px-3 px-md-4 mt-3 mt-md-4">
+        <div class="hero-gamified-card omni-glass-panel border-0 shadow-2xl position-relative overflow-hidden mb-4 rounded-4">
+            
+            <div class="hologram-mesh-bg"></div> 
+            <div class="dynamic-blob blob-primary"></div>
+            <div class="dynamic-blob blob-accent"></div>
+            <div class="noise-overlay"></div>
+            
+            <div class="p-4 p-md-5 text-center position-relative z-index-2">
+                
+                <div class="avatar-gamified-container d-inline-block mb-3 position-relative">
+                    <div class="level-badge shadow-glow-warning animate__animated animate__bounceIn flex-center">
+                        Lvl <span class="ms-1 fw-black">{% if stats.promedio_general %}{{ stats.promedio_general|floatformat:0 }}{% else %}1{% endif %}</span>
+                        <i class="fas fa-star text-warning ms-1 drop-shadow-sm"></i>
+                    </div>
+                    <div class="avatar-ring-animated position-relative">
+                        <i class="fas fa-user-astronaut fa-4x text-white position-relative z-index-2 float-hover"></i>
+                        <div class="ring-pulse-1"></div>
+                        <div class="ring-pulse-2"></div>
+                    </div>
+                </div>
+                
+                <h1 class="display-6 display-md-4 fw-black hero-title-fluid text-dark-omni mb-1 tracking-tight">
+                    Bienvenido, <span class="text-gradient-candy">{{ estudiante.get_full_name|default:estudiante.username|title }}</span>
+                </h1>
+                
+                <div class="d-flex justify-content-center align-items-center gap-2 mt-3 flex-wrap">
+                    <div class="badge-app-pill shadow-sm d-flex align-items-center bg-white border border-light">
+                        <i class="fas fa-shield-alt text-success-candy me-2 fs-6"></i>
+                        <span class="fw-bold text-dark-omni tracking-wide">{{ perfil.rol }}</span>
+                    </div>
+                    <div class="badge-app-pill shadow-sm d-flex align-items-center bg-dark-omni border border-secondary text-white">
+                        <i class="fas fa-bolt text-warning-candy me-2 fs-6"></i>
+                        <span class="fw-bold tracking-wide">EXP Activa</span>
+                    </div>
+                </div>
+
+                {% if curso %}
+                <div class="alert app-alert-success text-center rounded-pill mb-0 shadow-sm mt-4 mx-auto d-inline-flex align-items-center border border-success-subtle">
+                    <div class="pulse-dot-success me-3"></div>
+                    <span class="text-dark-omni fw-bold small tracking-wide text-uppercase me-2 opacity-75">Nodo de Conexión:</span> 
+                    <span class="fw-black px-3 py-1 bg-white rounded-pill text-success small shadow-sm">{{ curso.nombre }}</span>
+                </div>
+                {% else %}
+                <div class="alert app-alert-warning text-center rounded-pill mb-0 shadow-sm mt-4 mx-auto d-inline-flex align-items-center border border-warning-subtle">
+                    <i class="fas fa-exclamation-triangle text-warning-candy me-2 heartbeat-hover fa-lg"></i> 
+                    <span class="fw-bold text-dark-omni small tracking-wide">Atención: Sin nodo asignado. Contacte a soporte.</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid px-0 mb-5">
+        <div class="d-flex align-items-center justify-content-between px-3 px-md-4 mb-3">
+            <h5 class="fw-black text-dark-omni m-0 tracking-wide text-uppercase fs-8"><i class="fas fa-bolt text-warning-candy me-2"></i>Módulos de Inmersión</h5>
+            <div class="swipe-indicator d-md-none text-muted-ultralight fs-9 fw-bold tracking-widest text-uppercase animate__animated animate__pulse animate__infinite">
+                Swipe <i class="fas fa-arrow-right ms-1"></i>
+            </div>
+        </div>
+        
+        <div class="action-menu-scroll px-3 px-md-4 pb-3 pt-1">
+            <button onclick="toggleSimulador()" class="app-action-card bg-gradient-cyber shadow-hover text-start border-0 position-relative overflow-hidden group-hover-target">
+                <div class="action-icon bg-white-10 backdrop-blur border border-white-20 mb-3"><i class="fas fa-satellite-dish text-white fs-5 group-hover-spin"></i></div>
+                <h6 class="fw-black text-white mb-1 tracking-wide fs-6">Simulador</h6>
+                <small class="text-cyan font-monospace fs-9 fw-bold lh-1 d-block text-uppercase">Práctica Activa</small>
+                <div class="card-glow-effect"></div>
+                <div class="ripple-container"></div>
+            </button>
+
+            <button onclick="activarIA('est_mejoras')" class="app-action-card bg-gradient-primary-candy shadow-hover text-start border-0 position-relative overflow-hidden group-hover-target">
+                <div class="action-icon bg-white-20 backdrop-blur border border-white-20 mb-3"><i class="fas fa-chart-line text-white fs-5 group-hover-bounce"></i></div>
+                <h6 class="fw-black text-white mb-1 tracking-wide fs-6">Análisis IA</h6>
+                <small class="text-white-50 font-monospace fs-9 fw-bold lh-1 d-block text-uppercase">Rutas de Mejora</small>
+                <div class="card-glow-effect"></div>
+                <div class="ripple-container"></div>
+            </button>
+            
+            <button onclick="abrirModalPareto()" class="app-action-card bg-gradient-accent-candy shadow-hover text-start border-0 position-relative overflow-hidden group-hover-target">
+                <div class="action-icon bg-white-20 backdrop-blur border border-white-20 mb-3"><i class="fas fa-brain text-white fs-5 group-hover-pulse"></i></div>
+                <h6 class="fw-black text-white mb-1 tracking-wide fs-6">Tutor 80/20</h6>
+                <small class="text-white-50 font-monospace fs-9 fw-bold lh-1 d-block text-uppercase">Método Socrático</small>
+                <div class="card-glow-effect"></div>
+                <div class="ripple-container"></div>
+            </button>
+
+            <button onclick="activarIA('est_nivelacion')" class="app-action-card bg-gradient-danger-candy shadow-hover text-start border-0 position-relative overflow-hidden group-hover-target">
+                <div class="action-icon bg-white-20 backdrop-blur border border-white-20 mb-3"><i class="fas fa-heartbeat text-white fs-5 group-hover-heartbeat"></i></div>
+                <h6 class="fw-black text-white mb-1 tracking-wide fs-6">Nivelación</h6>
+                <small class="text-white-50 font-monospace fs-9 fw-bold lh-1 d-block text-uppercase">Plan de Rescate</small>
+                <div class="card-glow-effect"></div>
+                <div class="ripple-container"></div>
+            </button>
+        </div>
+    </div>
+
+    <div class="container-fluid px-3 px-md-4">
+        <div id="wrapperSimulador" class="mb-5 d-none transition-all-500">
+            <div class="card border-0 overflow-hidden app-simulator-frame shadow-hyper rounded-4 bg-dark-omni">
+                
+                <div class="card-header border-0 d-flex justify-content-between align-items-center py-3 px-4 simulator-topbar bg-black">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-grow text-cyan spinner-grow-sm me-3 shadow-glow-cyan" style="width: 12px; height: 12px;"></div>
+                        <div class="d-flex flex-column lh-1">
+                            <span class="text-white fw-black font-monospace fs-8 tracking-widest text-truncate text-uppercase">SIM_ENGINE_V3_SECURE</span>
+                            <span class="text-cyan opacity-50 font-monospace fs-9 tracking-widest">Ejecución Local</span>
+                        </div>
+                    </div>
+                    <div class="window-actions d-flex gap-3">
+                        <button onclick="fullScreenSim()" class="btn-action-app maximize shadow-hover-sm" title="Modo Inmersivo">
+                            <i class="fas fa-expand text-white"></i>
+                        </button>
+                        <button onclick="toggleSimulador()" class="btn-action-app close shadow-hover-sm" title="Terminar Instancia">
+                            <i class="fas fa-times text-white"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body p-0 position-relative simulator-viewport bg-void" style="height: 70vh; min-height: 450px;">
+                    
+                    <div id="simLoader" class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center bg-dark-omni z-index-10">
+                        <div class="quantum-spinner-v2 mb-4">
+                            <svg viewBox="0 0 100 100" class="spinner-svg">
+                                <circle cx="50" cy="50" r="45" class="track"></circle>
+                                <circle cx="50" cy="50" r="45" class="indicator"></circle>
+                            </svg>
+                            <i class="fas fa-atom text-cyan position-absolute top-50 start-50 translate-middle fs-3 animate__animated animate__pulse animate__infinite"></i>
+                        </div>
+                        <h6 class="text-cyan font-monospace tracking-widest text-uppercase fs-8 pulse-text">Descargando binarios al cliente...</h6>
+                        <small class="text-white-50 font-monospace fs-9 mt-2">Cero consumo de servidor detectado.</small>
+                    </div>
+                    
+                    <iframe id="iframeSimulador" 
+                            src="" 
+                            class="w-100 h-100 border-0 simulator-lens" 
+                            allow="autoplay; fullscreen; keyboard; accelerometer; gyroscope"
+                            sandbox="allow-scripts allow-same-origin allow-forms"
+                            referrerpolicy="strict-origin"
+                            loading="lazy">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if curso %}
+    <div class="container-fluid px-3 px-md-4">
+        
+        <div class="d-flex align-items-center justify-content-between mb-3 mt-4">
+            <h5 class="fw-black text-dark-omni m-0 tracking-wide text-uppercase fs-8"><i class="fas fa-chart-pie text-primary-candy me-2"></i>Telemetría de Progreso</h5>
+            <span class="badge bg-light text-muted border rounded-pill fs-9 font-monospace shadow-sm">Sync: Real-time</span>
+        </div>
+        
+        <div class="row g-3 g-md-4 mb-5 observe-stagger">
+            
+            <div class="col-6 col-md-3">
+                <div class="stat-card-app bg-white p-3 p-md-4 rounded-4 shadow-sm text-center h-100 position-relative overflow-hidden d-flex flex-column justify-content-center border border-light">
+                    <div class="stat-deco-circle bg-primary-candy opacity-5"></div>
+                    <span class="text-muted-ultralight fw-black text-uppercase fs-9 tracking-widest d-block mb-2 position-relative z-index-2">Score General</span>
+                    <h2 class="fw-black mb-0 font-monospace {% if stats.promedio_general < 3.5 %}text-danger-candy{% else %}text-success-candy{% endif %} lh-1 position-relative z-index-2 stat-number-pop" style="font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -2px;">
+                        {{ stats.promedio_general }}
+                    </h2>
+                    <div class="mt-2 position-relative z-index-2">
+                        <span class="badge bg-light text-muted border shadow-sm fs-9 px-2 py-1">Max 5.0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="stat-card-app bg-white p-3 p-md-4 rounded-4 shadow-sm text-center h-100 position-relative overflow-hidden border border-light transition-all-300" 
+                     {% if stats.total_fallas > 0 %}data-bs-toggle="modal" data-bs-target="#modalAsistencia" style="cursor:pointer;"{% endif %}>
+                    <div class="stat-deco-circle bg-warning opacity-5"></div>
+                    <span class="text-muted-ultralight fw-black text-uppercase fs-9 tracking-widest d-block mb-2 position-relative z-index-2">Asistencia</span>
+                    
+                    <div class="position-relative d-flex justify-content-center align-items-center mx-auto mb-2" style="width: 70px; height: 70px;">
+                        <svg viewBox="0 0 36 36" class="omni-circular-chart w-100 h-100">
+                            <path class="circle-track" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path class="circle-fill" stroke-dasharray="{{ stats.asistencia_pct }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke="{% if stats.asistencia_pct < 85 %}var(--color-danger-candy){% else %}var(--color-success-candy){% endif %}" stroke-width="3" stroke-linecap="round"/>
+                        </svg>
+                        <div class="position-absolute fw-black text-dark-omni font-monospace stat-number-pop" style="font-size: 1.2rem;">{{ stats.asistencia_pct }}<span style="font-size:0.6rem;">%</span></div>
+                    </div>
+                    
+                    <div class="mt-auto position-relative z-index-2">
+                        {% if stats.total_fallas > 0 %}
+                            <span class="badge bg-danger-candy text-white rounded-pill px-2 py-1 fs-9 shadow-sm animate__animated animate__pulse animate__infinite">
+                                <i class="fas fa-exclamation-circle me-1"></i> {{ stats.total_fallas }} Fallas
+                            </span>
+                        {% else %}
+                            <span class="badge bg-success-candy text-white rounded-pill px-2 py-1 fs-9 shadow-sm">
+                                <i class="fas fa-check me-1"></i> Perfecto
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="stat-card-app bg-white p-3 p-md-4 rounded-4 shadow-sm h-100 d-flex align-items-center border border-light">
+                    <div class="chart-wrapper flex-shrink-0 position-relative" style="height: 100px; width: 100px;">
+                        <canvas id="chartStatusNew" class="lazy-chart" data-chart-type="doughnut" data-chart-data='{{ stats.distribucion_data|safe|default:"[0,0]" }}'></canvas>
+                        <div class="position-absolute top-50 start-50 translate-middle text-muted opacity-25">
+                            <i class="fas fa-balance-scale fs-3"></i>
+                        </div>
+                    </div>
+                    <div class="ms-4 flex-grow-1">
+                        <span class="text-muted-ultralight fw-black text-uppercase fs-9 tracking-widest d-block mb-3 border-bottom pb-2">Balance Operativo</span>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-2 px-2 bg-light-mesh rounded-3 py-1 border border-light">
+                            <span class="fw-bold fs-8 text-dark-omni d-flex align-items-center">
+                                <div class="bg-gradient-success rounded-circle shadow-glow-success me-2" style="width:10px; height:10px;"></div> Dominadas
+                            </span>
+                            <span class="fw-black fs-5 font-monospace text-dark-omni">{{ stats.ganadas }}</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center px-2 bg-light-mesh rounded-3 py-1 border border-light">
+                            <span class="fw-bold fs-8 text-dark-omni d-flex align-items-center">
+                                <div class="bg-gradient-danger rounded-circle shadow-glow-danger me-2" style="width:10px; height:10px;"></div> En Riesgo
+                            </span>
+                            <span class="fw-black fs-5 font-monospace text-dark-omni">{{ stats.perdidas }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="stat-card-app bg-white p-4 p-md-5 rounded-4 shadow-sm border border-light">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h6 class="text-dark-omni fw-black fs-7 mb-0 text-uppercase tracking-wide"><i class="fas fa-chart-column text-accent-candy me-2"></i>Espectro Transversal por Asignatura</h6>
+                        <button class="btn btn-sm btn-light border rounded-circle" title="Expandir"><i class="fas fa-expand-alt text-muted"></i></button>
+                    </div>
+                    <div class="chart-wrapper w-100 position-relative" style="height: 250px;">
+                        <canvas id="chartMateriasNew" class="lazy-chart" data-chart-type="bar" data-labels='{{ stats.materias_labels|safe|default:"[]" }}' data-values='{{ stats.materias_data|safe|default:"[]" }}'></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between mb-3 mt-5">
+            <h5 class="fw-black text-dark-omni m-0 tracking-wide text-uppercase fs-8"><i class="fas fa-users text-secondary-candy me-2"></i>Tus Catedráticos</h5>
+            <div class="swipe-indicator d-md-none text-muted-ultralight fs-9 fw-bold tracking-widest text-uppercase">
+                Swipe <i class="fas fa-angle-double-right ms-1 animate__animated animate__headShake animate__infinite"></i>
+            </div>
+        </div>
+        
+        <div class="teacher-swipe-container pb-4 mb-4">
+            {% for profe in docentes %}
+            <div class="teacher-card bg-white p-4 rounded-4 shadow-sm border border-light text-center flex-shrink-0 position-relative overflow-hidden transition-all-300">
+                <div class="position-absolute top-0 start-0 w-100 bg-gradient-primary-candy" style="height: 4px;"></div>
+                
+                <div class="avatar-omni text-white rounded-circle d-flex justify-content-center align-items-center fw-bold mx-auto mb-3 shadow-md border border-2 border-white position-relative z-index-2" style="width: 72px; height: 72px; font-size: 1.8rem; background: var(--gradient-aurora);">
+                    {% if profe.foto_url %}
+                        <img src="{{ profe.foto_url }}" class="rounded-circle w-100 h-100" style="object-fit: cover;">
+                    {% else %}
+                        {{ profe.nombre|slice:":1" }}
+                    {% endif %}
+                </div>
+                
+                <h6 class="fw-black text-dark-omni fs-7 mb-1 text-truncate px-2 lh-sm" title="{{ profe.nombre }}">{{ profe.nombre }}</h6>
+                <p class="text-muted-ultralight font-monospace fs-9 mb-2">ID-{{ profe.id|stringformat:"04d" }}</p>
+                
+                <span class="badge bg-light-mesh text-dark-omni border border-light rounded-pill px-3 py-2 fs-9 mb-3 text-truncate d-block mx-auto shadow-inner" style="max-width: 95%;">
+                    <i class="fas fa-bookmark text-accent-candy me-1 opacity-50"></i> {{ profe.materia_principal }}
+                </span>
+                
+                <a href="{% url 'enviar_mensaje' %}?destinatario={{ profe.id }}&asunto=Consulta Estudiante: {{ estudiante.get_full_name }}" class="btn btn-sm bg-gradient-cyber text-cyan rounded-pill w-100 fw-bold fs-8 shadow-hover btn-contact-teacher">
+                    <i class="fas fa-paper-plane me-1"></i> Contactar
+                </a>
+            </div>
+            {% empty %}
+            <div class="alert bg-white shadow-sm rounded-4 text-center w-100 py-5 border border-light">
+                <i class="fas fa-user-slash fa-3x text-muted opacity-25 mb-3"></i>
+                <p class="mb-0 fw-black text-dark-omni text-uppercase tracking-wide fs-7">Directorio Vacío</p>
+                <small class="text-muted">Esperando sincronización de base de datos...</small>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% endif %}
+
+        <div class="d-flex align-items-center justify-content-between mb-4 mt-5">
+            <h5 class="fw-black text-dark-omni m-0 tracking-wide text-uppercase fs-8"><i class="fas fa-layer-group text-warning-candy me-2"></i>Progreso Ponderado Detallado</h5>
+        </div>
+
+        {% if materias_con_notas %}
+        <div class="card bg-white p-3 p-md-5 border border-light shadow-sm mb-5 rounded-4 observe-stagger">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h6 class="fw-black text-dark-omni text-uppercase fs-7 tracking-wide mb-1">Matriz Histórica Global</h6>
+                    <small class="text-muted-ultralight fw-medium">Tendencia del Promedio Final a través del tiempo</small>
+                </div>
+                <div class="badge bg-primary-candy text-white rounded-pill px-3 py-2 shadow-sm font-monospace fs-8">
+                    <i class="fas fa-satellite text-white-50 me-2 animate__animated animate__flash animate__infinite"></i> Live Sync
+                </div>
+            </div>
+            
+            <div class="chart-wrapper w-100 position-relative" style="height: 300px;">
+                <canvas id="progresoAcademicoChart" class="lazy-chart-global"></canvas>
+            </div>
+            
+            <div id="globalChartData" style="display: none;"
+                 data-periodos='[{% for p in periodos_disponibles %}"{{ p.nombre }}",{% endfor %}]'
+                 data-promedios='[
+                    {% for materia, periodos_notas in materias_con_notas.items %}
+                        {
+                            "materia": "{{ materia.nombre }}",
+                            "datos": [
+                                {% for periodo in periodos_disponibles %}
+                                    {% with nota_promedio_obj=periodos_notas|get_item:periodo.id|find_note_by_number:5 %}
+                                        {{ nota_promedio_obj.valor|default:'null' }}{% if not forloop.last %},{% endif %}
+                                    {% endwith %}
+                                {% endfor %}
+                            ]
+                        }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]'>
+            </div>
+        </div>
+
+        <div class="row g-3 g-md-4 observe-stagger mb-5">
+            {% for materia, periodos_notas in materias_con_notas.items %}
+            <div class="col-12 col-lg-6">
+                
+                <div class="card bg-white border border-light shadow-sm rounded-4 overflow-hidden app-subject-card h-100 d-flex flex-column">
+                    
+                    <button class="btn btn-link w-100 text-decoration-none p-3 p-md-4 d-flex justify-content-between align-items-center bg-transparent border-0 text-start omni-accordion-trigger" 
+                            data-bs-toggle="collapse" data-bs-target="#collapse-{{ materia.id }}" aria-expanded="false">
+                        <div class="d-flex align-items-center overflow-hidden me-3">
+                            <div class="subject-app-icon bg-gradient-light shadow-sm border border-light me-3 flex-shrink-0">
+                                <i class="fas fa-book text-primary-candy fs-5"></i>
+                            </div>
+                            <div class="overflow-hidden">
+                                <h6 class="mb-1 fw-black text-dark-omni fs-6 text-truncate" title="{{ materia.nombre }}">{{ materia.nombre }}</h6>
+                                <small class="badge bg-light-mesh text-muted border rounded-pill fs-9 fw-bold tracking-widest text-uppercase">Desplegar Análisis</small>
+                            </div>
+                        </div>
+                        <div class="collapse-icon-app flex-shrink-0 shadow-inner border border-light">
+                            <i class="fas fa-chevron-down text-dark-omni fs-7"></i>
+                        </div>
+                    </button>
+                    
+                    <div class="collapse flex-grow-1" id="collapse-{{ materia.id }}">
+                        <div class="card-body p-3 p-md-4 pt-0 bg-light-mesh border-top border-light custom-scrollbar" style="max-height: 60vh; overflow-y: auto;">
+                            
+                            {% for periodo in periodos_disponibles %}
+                            {% with notas_list=materias_con_notas|get_item:materia|get_item:periodo.id %}
+                            <div class="bg-white rounded-4 p-4 shadow-sm border border-light mb-4 position-relative overflow-hidden">
+                                <div class="position-absolute top-0 start-0 w-100 bg-secondary-candy opacity-50" style="height: 3px;"></div>
+                                
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h6 class="fw-black text-dark-omni fs-8 text-uppercase tracking-wide mb-0">
+                                        <i class="far fa-clock text-accent-candy me-2"></i>{{ periodo.nombre }}
+                                    </h6>
+                                    <i class="fas fa-ellipsis-h text-muted opacity-25"></i>
+                                </div>
+                                
+                                <div class="chart-wrapper position-relative w-100 mb-2" style="height: 140px;">
+                                    <canvas id="chart-{{ materia.id }}-{{ periodo.id }}"></canvas>
+                                </div>
+                                
+                                <div class="chart-data" data-materia-id="{{ materia.id }}" data-periodo-id="{{ periodo.id }}" style="display:none;">
+                                    <span class="chart-labels">{% for nota in notas_list.values|dictsort:"numero_nota" %}"{{ nota.descripcion|cut:'(%)'|cut:'Promedio ponderado'|truncatechars:15 }}", {% endfor %}</span>
+                                    <span class="chart-data-values">{% for nota in notas_list.values|dictsort:"numero_nota" %}{{ nota.valor }}, {% endfor %}</span>
+                                </div>
+                                
+                                {% with nota_promedio=notas_list|find_note_by_number:5 %}
+                                {% if nota_promedio %}
+                                <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-light dashed-top">
+                                    <span class="fw-black text-muted-ultralight text-uppercase fs-9 tracking-widest">Score Final Calculado</span>
+                                    <div class="badge rounded-pill px-4 py-2 fs-5 shadow-sm fw-black font-monospace border border-2 border-white {% if nota_promedio.valor >= 3.0 %}bg-gradient-success{% else %}bg-gradient-danger{% endif %} text-white transform-hover">
+                                        {{ nota_promedio.valor }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                            {% endwith %}
+                            {% endfor %}
+
+                            <div class="mt-4 pt-2">
+                                {% with comentarios_list=comentarios_docente|get_item:materia.id %}
+                                {% if comentarios_list %}
+                                <h6 class="fw-black tracking-widest text-uppercase fs-9 text-muted mb-3 ps-1 d-flex align-items-center">
+                                    <i class="fas fa-comment-alt text-primary-candy me-2 opacity-75"></i>Análisis Cualitativo
+                                </h6>
+                                <div class="d-flex flex-column gap-3">
+                                    {% for comentario_obj in comentarios_list %}
+                                    <div class="bg-white p-4 rounded-4 shadow-sm border-start border-4 border-primary-candy position-relative overflow-hidden">
+                                        <i class="fas fa-quote-right position-absolute top-0 end-0 mt-3 me-3 opacity-5 fa-3x text-primary-candy"></i>
+                                        <p class="mb-3 fw-medium text-dark-omni fs-7 lh-base position-relative z-index-2 fst-italic">"{{ comentario_obj.comentario }}"</p>
+                                        <div class="d-flex align-items-center pt-3 border-top border-light position-relative z-index-2">
+                                            <div class="avatar-micro-pulse me-2">
+                                                <div class="bg-dark-omni text-white rounded-circle d-flex justify-content-center align-items-center fw-black fs-9 shadow-sm" style="width:24px; height:24px;">
+                                                    {{ comentario_obj.docente.username|slice:":1"|upper }}
+                                                </div>
+                                            </div>
+                                            <small class="text-muted fw-bold font-monospace fs-9 tracking-wide">{{ comentario_obj.docente.get_full_name|default:comentario_obj.docente.username }}</small>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+
+                            <div class="mt-4 pt-3">
+                                {% with actividades_list=actividades_semanales|get_item:materia.id %}
+                                {% if actividades_list %}
+                                <h6 class="fw-black tracking-widest text-uppercase fs-9 text-muted mb-3 ps-1 d-flex align-items-center">
+                                    <i class="fas fa-tasks text-accent-candy me-2 opacity-75"></i>Misiones Activas
+                                </h6>
+                                <div class="d-flex flex-column gap-3">
+                                    {% for actividad in actividades_list %}
+                                    <div class="bg-white p-3 p-md-4 rounded-4 shadow-sm border border-light d-flex align-items-start position-relative group-hover-target transition-all-300">
+                                        <div class="mission-icon-bg bg-accent-candy-light text-accent-candy rounded-circle d-flex justify-content-center align-items-center me-3 flex-shrink-0 shadow-inner border border-white" style="width:42px; height:42px;">
+                                            <i class="fas fa-scroll fs-6 group-hover-bounce"></i>
+                                        </div>
+                                        <div class="flex-grow-1 overflow-hidden">
+                                            <h6 class="fw-black text-dark-omni mb-1 fs-7 text-truncate" title="{{ actividad.titulo }}">{{ actividad.titulo }}</h6>
+                                            <p class="small text-muted mb-3 lh-sm opacity-75 pe-2">{{ actividad.descripcion|truncatechars:90 }}</p>
+                                            <div class="d-flex justify-content-between align-items-center bg-light-mesh rounded-pill px-3 py-2 border border-light">
+                                                <span class="text-muted-ultralight fw-black fs-9 tracking-widest text-uppercase d-flex align-items-center">
+                                                    <i class="fas fa-hourglass-half text-warning me-2 animate__animated animate__pulse animate__infinite"></i> Plazo
+                                                </span>
+                                                <span class="fw-black font-monospace fs-8 text-dark-omni">
+                                                    {{ actividad.fecha_inicio|date:"d M" }} <i class="fas fa-arrow-right mx-1 text-muted fs-9"></i> {{ actividad.fecha_fin|date:"d M" }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+
+                            <div class="mt-4 pt-3 pb-2">
+                                {% with logros_materia=logros_por_materia_por_periodo|get_item:materia %}
+                                    {% if logros_materia %}
+                                    <h6 class="fw-black tracking-widest text-uppercase fs-9 text-muted mb-3 ps-1 d-flex align-items-center">
+                                        <i class="fas fa-medal text-warning-candy me-2 opacity-75"></i>Insignias Desbloqueadas
+                                    </h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for periodo_id, logros_list in logros_materia.items %}
+                                            {% for logro in logros_list %}
+                                            <div class="badge bg-white text-dark-omni border border-warning-subtle shadow-sm rounded-pill px-3 py-2 fw-bold fs-8 d-flex align-items-center transform-hover">
+                                                <i class="fas fa-star text-warning-candy me-2 fs-7 drop-shadow-sm"></i> 
+                                                <span class="text-truncate d-inline-block lh-1 pt-1" style="max-width: 220px;">{{ logro.descripcion }}</span>
+                                            </div>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert bg-white border border-light text-center py-5 shadow-sm rounded-4 mb-5" role="alert">
+            <div class="empty-state-hologram mx-auto mb-4 position-relative">
+                <div class="hologram-ring"></div>
+                <i class="fas fa-ghost fa-3x text-muted opacity-25 animate__animated animate__float position-relative z-index-2"></i>
+            </div>
+            <h5 class="fw-black text-dark-omni tracking-wide">Registro Limpio</h5>
+            <p class="text-muted small mb-0 px-md-5">Aún no se han consolidado calificaciones ni misiones en tu expediente. El ciclo académico apenas inicia.</p>
+        </div>
+        {% endif %}
+
+        {% if curso %}
+        <div class="d-flex align-items-center justify-content-between mb-4 mt-5">
+            <h5 class="fw-black text-dark-omni m-0 tracking-wide text-uppercase fs-8"><i class="fas fa-balance-scale text-success-candy me-2"></i>Matriz de Ciudadanía</h5>
+            <span class="badge bg-light text-muted border rounded-pill fs-9 font-monospace shadow-sm px-3"><i class="fas fa-lock me-1"></i> Inmutable</span>
+        </div>
+        
+        <div class="card bg-white border border-light shadow-sm rounded-4 p-3 p-md-4 mb-5 observe-stagger">
+            {% if convivencia_notas or materias_con_notas %}
+            
+            <div class="d-flex flex-column gap-3">
+                
+                {% for materia, periodos_notas in materias_con_notas.items %}
+                    {% if "convivencia" in materia.nombre|lower %}
+                        {% for periodo in periodos_disponibles %}
+                            {% with nota_promedio_obj=periodos_notas|get_item:periodo.id|find_note_by_number:5 %}
+                            <div class="p-3 p-md-4 rounded-4 bg-light-mesh border border-light d-flex flex-column flex-md-row align-items-md-center gap-3 transition-all-300 transform-hover">
+                                
+                                <div class="d-flex align-items-center gap-3 flex-shrink-0">
+                                    <div class="score-pill d-flex flex-column align-items-center justify-content-center shadow-md rounded-4 {% if nota_promedio_obj.valor >= 3.0 %}bg-gradient-success{% else %}bg-gradient-danger{% endif %} text-white border border-2 border-white" style="width: 56px; height: 56px;">
+                                        <span class="fw-black fs-5 font-monospace lh-1">{{ nota_promedio_obj.valor|default:"-" }}</span>
+                                    </div>
+                                    <div class="d-md-none">
+                                        <h6 class="fw-black text-dark-omni fs-7 mb-1">{{ periodo.nombre }}</h6>
+                                        <span class="badge bg-white text-muted border shadow-sm fs-9 font-monospace"><i class="fas fa-tag me-1 opacity-50"></i>Asignatura</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-none d-md-block flex-shrink-0" style="width: 150px;">
+                                    <h6 class="fw-black text-dark-omni fs-7 mb-1">{{ periodo.nombre }}</h6>
+                                    <span class="badge bg-white text-muted border shadow-sm fs-9 font-monospace"><i class="fas fa-tag me-1 opacity-50"></i>Asignatura</span>
+                                </div>
+                                
+                                <div class="flex-grow-1 bg-white p-3 rounded-4 border border-light shadow-inner">
+                                    {% with comentarios_list=comentarios_docente|get_item:materia.id %}
+                                        {% for c in comentarios_list %}
+                                            {% if c.periodo.id == periodo.id %}
+                                                <div class="d-flex align-items-start">
+                                                    <i class="fas fa-quote-left text-primary-candy opacity-25 mt-1 me-2 fs-6"></i>
+                                                    <span class="text-dark-omni fw-medium small lh-base fst-italic">{{ c.comentario }}</span>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endwith %}
+                                </div>
+                            </div>
+                            {% endwith %}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+
+                {% for periodo in curso.periodos.all %}
+                    {% with nota_data=convivencia_notas|get_item:periodo.id %}
+                        {% if nota_data.valor %} 
+                        <div class="p-3 p-md-4 rounded-4 bg-light-mesh border border-light d-flex flex-column flex-md-row align-items-md-center gap-3 transition-all-300 transform-hover">
+                            
+                            <div class="d-flex align-items-center gap-3 flex-shrink-0">
+                                <div class="score-pill d-flex flex-column align-items-center justify-content-center shadow-md rounded-4 {% if nota_data.valor >= 3.0 %}bg-gradient-success{% else %}bg-gradient-danger{% endif %} text-white border border-2 border-white" style="width: 56px; height: 56px;">
+                                    <span class="fw-black fs-5 font-monospace lh-1">{{ nota_data.valor|floatformat:2|default:"-" }}</span>
+                                </div>
+                                <div class="d-md-none">
+                                    <h6 class="fw-black text-dark-omni fs-7 mb-1">{{ periodo.nombre }}</h6>
+                                    <span class="badge bg-dark-omni text-white shadow-sm fs-9 font-monospace"><i class="fas fa-eye me-1 opacity-50"></i>Observador</span>
+                                </div>
+                            </div>
+
+                            <div class="d-none d-md-block flex-shrink-0" style="width: 150px;">
+                                <h6 class="fw-black text-dark-omni fs-7 mb-1">{{ periodo.nombre }}</h6>
+                                <span class="badge bg-dark-omni text-white shadow-sm fs-9 font-monospace"><i class="fas fa-eye me-1 opacity-50"></i>Observador</span>
+                            </div>
+                            
+                            <div class="flex-grow-1 bg-white p-3 rounded-4 border-start border-4 border-success shadow-sm">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-check-circle text-success-candy me-2 fs-5 flex-shrink-0"></i>
+                                    <span class="text-dark-omni fw-bold small lh-sm">{{ nota_data.comentario|default:"Comportamiento alineado íntegramente al manual de convivencia." }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endwith %}
+                {% endfor %}
+            </div>
+            
+            {% else %}
+            <div class="text-center py-5 bg-light-mesh rounded-4 border border-light">
+                <div class="icon-circle-success mx-auto mb-3 drop-shadow-sm d-flex align-items-center justify-content-center bg-white border border-light rounded-circle" style="width: 64px; height: 64px;">
+                    <i class="fas fa-shield-alt fs-2 text-success opacity-75 animate__animated animate__pulse animate__infinite"></i>
+                </div>
+                <h6 class="fw-black text-dark-omni tracking-wide text-uppercase">Estado Neutral</h6>
+                <small class="text-muted fw-medium">No existen anotaciones disciplinarias anómalas en el registro.</small>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="app-bottom-nav d-md-none bg-white border-top border-light fixed-bottom shadow-lg z-index-1000 px-3 py-2 d-flex justify-content-between align-items-center pb-safe">
+        <a href="#" class="nav-item flex-column flex-center text-decoration-none active text-primary-candy">
+            <i class="fas fa-home fs-5 mb-1"></i>
+            <span class="fs-9 fw-bold">Inicio</span>
+        </a>
+        <a href="#" class="nav-item flex-column flex-center text-decoration-none text-muted transition-all-300 hover-primary">
+            <i class="fas fa-chart-line fs-5 mb-1"></i>
+            <span class="fs-9 fw-bold">Análisis</span>
+        </a>
+        
+        <div class="nav-item-center-wrap position-relative">
+            <button class="btn nav-item-center bg-gradient-aurora text-white rounded-circle shadow-glow-aurora d-flex justify-content-center align-items-center border-0 animate__animated animate__pulse animate__infinite" 
+                    onclick="activarIA('est_mejoras')" style="width: 56px; height: 56px; transform: translateY(-20px);">
+                <i class="fas fa-robot fs-4"></i>
+            </button>
+        </div>
+        
+        <a href="#" class="nav-item flex-column flex-center text-decoration-none text-muted transition-all-300 hover-primary" onclick="toggleSimulador()">
+            <i class="fas fa-satellite-dish fs-5 mb-1"></i>
+            <span class="fs-9 fw-bold">Simular</span>
+        </a>
+        <a href="#" class="nav-item flex-column flex-center text-decoration-none text-muted transition-all-300 hover-primary">
+            <i class="fas fa-user-circle fs-5 mb-1"></i>
+            <span class="fs-9 fw-bold">Perfil</span>
+        </a>
+    </div>
+
+    <button class="fab-ia-tutor d-none d-md-flex bg-gradient-aurora shadow-glow-aurora rounded-circle border-0 pulse-ring-animation" onclick="activarIA('est_mejoras')" title="Asistente Socrático">
+        <i class="fas fa-robot text-white fs-4"></i>
+    </button>
+</div>
+
+<div class="modal fade bottom-sheet-mobile" id="modalIA" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable m-0 m-md-auto h-100 align-items-end align-items-md-center">
+        <div class="modal-content border-0 shadow-hyper bg-light" style="border-radius: 28px 28px 0 0; max-height: 92vh; height: 100%;">
+            
+            <div class="w-100 d-flex justify-content-center pt-3 pb-2 d-md-none touch-action-none" data-bs-dismiss="modal">
+                <div class="bg-secondary rounded-pill opacity-25" style="width: 48px; height: 6px;"></div>
+            </div>
+            
+            <div class="modal-header border-0 bg-white shadow-sm px-4 py-3 z-index-10">
+                <div class="d-flex align-items-center w-100">
+                    <div class="avatar-nano bg-gradient-aurora text-white rounded-circle d-flex justify-content-center align-items-center me-3 shadow-sm position-relative">
+                        <i class="fas fa-robot fs-6"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-white rounded-circle"></span>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="modal-title fw-black text-dark-omni m-0 lh-1">Tutor Socrático Neural</h6>
+                        <small class="text-success fw-bold font-monospace fs-9 tracking-widest text-uppercase">En línea</small>
+                    </div>
+                    <button type="button" class="btn btn-light rounded-circle shadow-sm border border-light d-flex justify-content-center align-items-center" data-bs-dismiss="modal" style="width: 36px; height:36px;">
+                        <i class="fas fa-times text-muted"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-body p-0 chat-mesh-bg position-relative custom-scrollbar" id="modalBodyIA" style="scroll-behavior: smooth;">
+                <div class="p-3 p-md-4 d-flex flex-column gap-3 pb-5" id="chatContainerInner">
+                    </div>
+            </div>
+
+            <div class="modal-footer bg-white border-top border-light py-3 px-3 px-md-4 pb-safe z-index-10">
+                <div class="input-group omni-chat-input w-100 p-1 bg-light border border-light rounded-pill d-flex align-items-center shadow-inner focus-ring-app">
+                    <input type="text" id="chatInputUser" class="form-control border-0 shadow-none bg-transparent fw-medium fs-7 text-dark-omni" placeholder="Ingresa tu duda o concepto..." style="padding-left: 1.2rem;">
+                    <button class="btn bg-gradient-primary-candy rounded-circle d-flex justify-content-center align-items-center me-1 border-0 shadow-sm transition-transform" onclick="enviarRespuestaChat()" style="width: 44px; height: 44px;">
+                        <i class="fas fa-paper-plane text-white ms-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalParetoInput" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered px-3">
+        <div class="modal-content border-0 shadow-hyper rounded-4 bg-white overflow-hidden animate__animated animate__zoomIn animate__faster">
+            <div class="modal-body p-4 p-md-5 text-center position-relative">
+                <button type="button" class="btn-close position-absolute top-0 end-0 m-3 shadow-none" data-bs-dismiss="modal"></button>
+                
+                <div class="icon-hexa-warning mx-auto mb-4 mt-2 d-flex justify-content-center align-items-center position-relative">
+                    <div class="pulse-ring bg-warning opacity-25"></div>
+                    <i class="fas fa-bolt text-warning-candy fs-1 drop-shadow-sm position-relative z-index-2 animate__animated animate__flash animate__infinite animate__slower"></i>
+                </div>
+                
+                <h4 class="fw-black mb-2 text-dark-omni tracking-tight">Decodificación Pareto</h4>
+                <p class="text-muted small mb-4 lh-sm px-md-3">Nuestro algoritmo abstrae el 20% de los conceptos base que te garantizarán el 80% del dominio sobre cualquier temática.</p>
+                
+                <div class="form-floating mb-4 shadow-sm rounded-4 border border-light focus-ring-app overflow-hidden">
+                    <input type="text" id="inputParetoTema" class="form-control border-0 bg-light-mesh fw-black text-center text-dark-omni fs-6 font-monospace" placeholder="Concepto" style="height: 64px;">
+                    <label for="inputParetoTema" class="w-100 text-center text-muted fw-bold fs-8 tracking-widest text-uppercase pt-3">Ingresar Entidad de Estudio</label>
+                </div>
+                
+                <button onclick="ejecutarPareto()" class="btn btn-lg bg-gradient-accent-candy text-white rounded-pill w-100 py-3 fw-black fs-7 shadow-hover border-0 tracking-wide">
+                    <i class="fas fa-magic me-2"></i> SINTETIZAR CONOCIMIENTO
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade bottom-sheet-mobile" id="modalAsistencia" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered align-items-end align-items-md-center m-0 m-md-auto h-100">
+        <div class="modal-content border-0 shadow-hyper bg-light-mesh" style="border-radius: 24px 24px 0 0;">
+            <div class="w-100 d-flex justify-content-center pt-3 pb-2 d-md-none" data-bs-dismiss="modal">
+                <div class="bg-secondary rounded-pill opacity-25" style="width: 48px; height: 6px;"></div>
+            </div>
+            
+            <div class="modal-header border-0 bg-white px-4 pt-3 pb-3 shadow-sm z-index-10">
+                <h5 class="modal-title fw-black fs-6 d-flex align-items-center tracking-wide text-uppercase text-dark-omni">
+                    <div class="bg-danger-candy text-white rounded-circle flex-center me-3 shadow-glow-danger" style="width:32px; height:32px;"><i class="fas fa-calendar-times fs-8"></i></div>
+                    Registro de Fallas
+                </h5>
+                <button type="button" class="btn-close d-none d-md-block" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div class="modal-body p-3 p-md-4 custom-scrollbar" style="max-height: 50vh; overflow-y:auto;">
+                {% if stats.detalle_fallas %}
+                <div class="d-flex flex-column gap-3">
+                    {% for falla in stats.detalle_fallas %}
+                    <div class="bg-white p-3 rounded-4 shadow-sm border border-light d-flex align-items-center transition-all-300 transform-hover">
+                        <div class="bg-light-mesh border border-light rounded-circle d-flex justify-content-center align-items-center me-3 flex-shrink-0" style="width:48px; height:48px;">
+                            <i class="fas fa-exclamation text-danger-candy fs-5 animate__animated animate__headShake animate__infinite animate__slower"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="fw-black text-dark-omni mb-1 fs-7">{{ falla.materia.nombre }}</h6>
+                            <div class="d-flex align-items-center">
+                                <i class="far fa-clock text-muted opacity-50 me-1 fs-9"></i>
+                                <small class="fw-bold text-muted fs-8 font-monospace">{{ falla.fecha|date:"d M, Y" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="modal-footer bg-white border-top border-light py-3 px-4 pb-safe d-md-none">
+                <button type="button" class="btn btn-dark w-100 rounded-pill fw-black tracking-widest text-uppercase py-3" data-bs-dismiss="modal">Entendido</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ==========================================================================
+   📱 1. OMNI-APP CSS ARCHITECTURE (MOBILE FIRST, GAMIFIED, PASTEL-CYBER)
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@600;800&display=swap');
+
+:root {
+    /* 1.1 PALETA GAMIFIED NEON-PASTEL */
+    --color-primary-candy: #6366f1;   /* Indigo vibrante */
+    --color-secondary-candy: #0ea5e9; /* Ocean luminoso */
+    --color-accent-candy: #a855f7;    /* Violeta mágico */
+    --color-success-candy: #10b981;   /* Verde menta/esmeralda */
+    --color-danger-candy: #f43f5e;    /* Rojo sandía */
+    --color-warning-candy: #f59e0b;   /* Naranja mango */
+    --color-cyan: #06b6d4;            /* Cyan tech */
+    
+    /* 1.2 SUPERFICIES Y FONDOS (NEO-BRUTALISM + GLASS) */
+    --color-bg-base: #f8fafc;         /* Slate 50 */
+    --color-dark-omni: #0f172a;       /* Slate 900 (Casi negro) */
+    --color-glass-base: rgba(255, 255, 255, 0.85);
+    
+    /* 1.3 GRADIENTES FLUIDOS */
+    --gradient-primary-candy: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
+    --gradient-accent-candy: linear-gradient(135deg, #a855f7 0%, #d946ef 100%);
+    --gradient-danger-candy: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%);
+    --gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    --gradient-aurora: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+    --gradient-cyber: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    --gradient-light: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+    
+    /* 1.4 TIPOGRAFÍA (LEGIBILIDAD MÓVIL) */
+    --font-sans: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    
+    /* 1.5 SOMBRAS (PROFUNDIDAD Z-INDEX) */
+    --shadow-sm: 0 2px 8px -2px rgba(15, 23, 42, 0.08);
+    --shadow-md: 0 4px 12px -4px rgba(15, 23, 42, 0.12);
+    --shadow-2xl: 0 25px 50px -12px rgba(15, 23, 42, 0.15);
+    --shadow-hyper: 0 0 40px rgba(15, 23, 42, 0.15);
+    --shadow-inner: inset 0 2px 4px rgba(0,0,0,0.04);
+    --shadow-inner-dark: inset 0 2px 4px rgba(255,255,255,0.15);
+    
+    /* 1.6 EMISIVIDAD (GLOW EFFECTS) */
+    --shadow-glow-aurora: 0 8px 25px -5px rgba(168, 85, 247, 0.5);
+    --shadow-glow-success: 0 8px 20px -5px rgba(16, 185, 129, 0.4);
+    --shadow-glow-danger: 0 8px 20px -5px rgba(244, 63, 94, 0.4);
+    --shadow-glow-warning: 0 8px 20px -5px rgba(245, 158, 11, 0.4);
+    --shadow-glow-cyan: 0 0 20px rgba(6, 182, 212, 0.4);
+}
+
+/* ==========================================================================
+   2. REGLAS BASE & UTILIDADES GLOBALES
+   ========================================================================== */
+body { 
+    font-family: var(--font-sans); 
+    background-color: var(--color-bg-base); 
+    color: var(--color-dark-omni); 
+    -webkit-tap-highlight-color: transparent; /* Adiós al tap azul feo en móviles */
+    overflow-x: hidden;
+}
+
+.fw-black { font-weight: 900 !important; }
+.fs-7 { font-size: 0.9rem; } .fs-8 { font-size: 0.8rem; } .fs-9 { font-size: 0.7rem; }
+.tracking-wide { letter-spacing: 0.02em; } .tracking-widest { letter-spacing: 0.08em; } .tracking-tight { letter-spacing: -0.04em; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.transition-all-300 { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+.transition-all-500 { transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+.z-index-2 { z-index: 2; } .z-index-10 { z-index: 10; } .z-index-1000 { z-index: 1000; }
+
+/* Colors Text */
+.text-primary-candy { color: var(--color-primary-candy) !important; }
+.text-success-candy { color: var(--color-success-candy) !important; }
+.text-danger-candy { color: var(--color-danger-candy) !important; }
+.text-warning-candy { color: var(--color-warning-candy) !important; }
+.text-accent-candy { color: var(--color-accent-candy) !important; }
+.text-dark-omni { color: var(--color-dark-omni) !important; }
+.text-cyan { color: var(--color-cyan) !important; }
+.text-muted-ultralight { color: #94a3b8 !important; }
+
+/* Gradients Text (Webkit) */
+.text-gradient-candy { background: var(--gradient-primary-candy); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block;}
+.text-gradient-hyper { background: var(--gradient-aurora); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block;}
+
+/* Backgrounds */
+.bg-primary-candy { background-color: var(--color-primary-candy) !important; }
+.bg-success-candy { background-color: var(--color-success-candy) !important; }
+.bg-danger-candy { background-color: var(--color-danger-candy) !important; }
+.bg-dark-omni { background-color: var(--color-dark-omni) !important; }
+.bg-void { background-color: #020617; } /* Deep Slate */
+
+.bg-gradient-primary-candy { background: var(--gradient-primary-candy) !important; }
+.bg-gradient-accent-candy { background: var(--gradient-accent-candy) !important; }
+.bg-gradient-danger-candy { background: var(--gradient-danger-candy) !important; }
+.bg-gradient-cyber { background: var(--gradient-cyber) !important; }
+.bg-gradient-aurora { background: var(--gradient-aurora) !important; }
+.bg-gradient-success { background: var(--gradient-success) !important; }
+.bg-gradient-light { background: var(--gradient-light) !important; }
+
+.bg-light-mesh { background-color: #f8fafc; border: 1px solid #f1f5f9; }
+.bg-white-90 { background-color: rgba(255,255,255,0.9); }
+.bg-white-25 { background-color: rgba(255,255,255,0.25); }
+.bg-white-10 { background-color: rgba(255,255,255,0.1); }
+.bg-accent-candy-light { background-color: rgba(168, 85, 247, 0.1) !important; }
+.backdrop-blur { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+
+/* ==========================================================================
+   3. SISTEMA DE SOMBRAS Y HOVER EFFECTS (HAPTIC SIMULATION)
+   ========================================================================== */
+.shadow-hover { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s; }
+.shadow-hover:hover, .shadow-hover:active { transform: translateY(-4px) scale(1.02); box-shadow: 0 12px 24px -8px rgba(15,23,42,0.2) !important; z-index: 10; }
+.shadow-hover-sm { transition: transform 0.2s; } .shadow-hover-sm:hover { transform: scale(1.1); box-shadow: var(--shadow-sm); }
+.transform-hover { transition: transform 0.2s; } .transform-hover:hover { transform: scale(1.03); }
+.hover-levitate { transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s; }
+.hover-levitate:hover { transform: translateY(-8px); box-shadow: var(--shadow-2xl) !important; z-index: 5; position: relative; }
+
+.shadow-glow-aurora { box-shadow: var(--shadow-glow-aurora); }
+.shadow-glow-success { box-shadow: var(--shadow-glow-success); }
+.shadow-glow-danger { box-shadow: var(--shadow-glow-danger); }
+.shadow-glow-warning { box-shadow: var(--shadow-glow-warning); }
+.shadow-glow-cyan { box-shadow: var(--shadow-glow-cyan); }
+.drop-shadow-sm { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+
+.omni-glass-panel { background: var(--color-glass-base); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); border: 1px solid rgba(255,255,255,0.6); }
+
+/* Focus Ring Custom */
+.focus-ring-app:focus-within { box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), var(--shadow-sm); border-color: var(--color-primary-candy) !important; }
+
+/* ==========================================================================
+   4. COMPONENTES UI: HERO, AVATARES Y BOTONES
+   ========================================================================== */
+.hero-gamified-card { min-height: 320px; display: flex; flex-direction: column; justify-content: center; }
+
+/* Avatares Circulares con Anillos Gamificados */
+.avatar-gamified-container { position: relative; }
+.avatar-ring-animated { width: 100px; height: 100px; background: var(--gradient-aurora); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 4px solid white; box-shadow: var(--shadow-glow-aurora); z-index: 2; }
+.level-badge { position: absolute; top: -5px; right: -15px; background: white; color: var(--color-dark-omni); padding: 4px 12px; border-radius: 20px; font-weight: 900; font-size: 0.75rem; border: 2px solid var(--color-bg-base); z-index: 10; font-family: var(--font-mono); }
+.badge-app-pill { background: white; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-family: var(--font-mono); }
+.avatar-omni { border: 3px solid white; }
+.avatar-micro-pulse { position: relative; }
+.avatar-micro-pulse::after { content:''; position:absolute; top:-2px; left:-2px; right:-2px; bottom:-2px; border-radius:50%; border: 2px solid var(--color-primary-candy); opacity:0; animation: microPulse 2s infinite; }
+@keyframes microPulse { 0%{transform:scale(1); opacity:0.8;} 100%{transform:scale(1.3); opacity:0;} }
+
+/* Indicadores de Estado */
+.pulse-dot-success { width: 10px; height: 10px; background-color: var(--color-success-candy); border-radius: 50%; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); animation: pulseDot 1.5s infinite; }
+@keyframes pulseDot { 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+
+/* Botones Principales (Quantum / Cyber) */
+.omni-btn-quantum { background: var(--color-dark-omni); color: #fff; border: 1px solid rgba(6, 182, 212, 0.3); font-weight: 900; font-family: var(--font-mono); letter-spacing: 0.5px; position: relative; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.4); }
+.omni-btn-quantum .btn-glow-layer { position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.4), transparent); transform: skewX(-20deg); transition: 0s; }
+.omni-btn-quantum:hover { color: var(--color-cyan); border-color: var(--color-cyan); box-shadow: var(--shadow-glow-cyan); transform: translateY(-4px) scale(1.02); }
+.omni-btn-quantum:hover .btn-glow-layer { left: 200%; transition: 0.7s ease-in-out; }
+
+.omni-btn-primary { background: var(--gradient-primary-candy); color: white; border: none; font-weight: 800; box-shadow: 0 8px 16px -4px rgba(99, 102, 241, 0.4); }
+.omni-btn-primary:hover { transform: translateY(-3px); box-shadow: var(--shadow-glow-aurora); color: white; }
+.omni-btn-danger { background: var(--gradient-danger-candy); color: white; border: none; font-weight: 800; box-shadow: 0 8px 16px -4px rgba(244, 63, 94, 0.4); }
+.omni-btn-danger:hover { transform: translateY(-3px); box-shadow: var(--shadow-glow-danger); color: white; }
+.omni-btn-outline { background: rgba(255,255,255,0.7); color: var(--color-primary-candy); border: 2px solid var(--color-primary-candy); font-weight: 800; backdrop-filter: blur(5px); }
+.omni-btn-outline:hover { background: var(--color-primary-candy); color: white; box-shadow: 0 8px 16px -4px rgba(99, 102, 241, 0.4); transform: translateY(-3px); }
+.omni-btn-outline-cyber { background: transparent; border: 2px solid #e2e8f0; color: var(--color-dark-omni); transition: all 0.2s; }
+.omni-btn-outline-cyber:hover { background: var(--color-dark-omni); color: white; border-color: var(--color-dark-omni); }
+.omni-btn-cyber-icon { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); } .omni-btn-cyber-icon:active { transform: scale(0.9); }
+
+/* ==========================================================================
+   5. MOBILE FIRST: HORIZONTAL SWIPES & BOTTOM NAV
+   ========================================================================== */
+/* Menú de Acciones Rápidas (Estilo Stories) */
+.action-menu-scroll { display: flex; overflow-x: auto; gap: 16px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.action-menu-scroll::-webkit-scrollbar { display: none; }
+.app-action-card { min-width: 140px; border-radius: 24px; padding: 20px; scroll-snap-align: start; flex-shrink: 0; outline: none; }
+.action-icon { width: 48px; height: 48px; border-radius: 16px; display: flex; justify-content: center; align-items: center; }
+.card-glow-effect { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.app-action-card:hover .card-glow-effect { opacity: 1; }
+
+/* Directorio de Profesores Swipe */
+.teacher-swipe-container { display: flex; overflow-x: auto; gap: 16px; padding: 10px 4px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.teacher-swipe-container::-webkit-scrollbar { display: none; }
+.teacher-card { min-width: 170px; max-width: 200px; scroll-snap-align: center; }
+
+/* FAB & Bottom Nav */
+.fab-ia-tutor { position: fixed; bottom: 30px; right: 30px; width: 64px; height: 64px; z-index: 1000; display: flex; align-items: center; justify-content: center; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); outline: none; }
+.fab-ia-tutor:active { transform: scale(0.85); }
+.app-bottom-nav { border-radius: 24px 24px 0 0; padding-bottom: env(safe-area-inset-bottom); }
+.nav-item { width: 20%; color: #94a3b8; }
+.nav-item.active { color: var(--color-primary-candy); }
+.nav-item:active { transform: scale(0.9); }
+.nav-item-center-wrap { width: 20%; display: flex; justify-content: center; }
+
+@media (max-width: 767.98px) {
+    .lms-app-ecosystem { padding-bottom: 100px !important; } /* Espacio para el Bottom Nav */
+    .action-menu-scroll { margin-left: -1rem; margin-right: -1rem; padding-left: 1rem !important; padding-right: 1rem !important; }
+    .teacher-swipe-container { margin-left: -1rem; margin-right: -1rem; padding-left: 1rem !important; padding-right: 1rem !important; }
+    
+    /* Bottom Sheets Nativos para Modales en Móvil */
+    .bottom-sheet-mobile .modal-dialog { align-items: flex-end; margin: 0; height: 100%; padding-top: 15vh; }
+    .bottom-sheet-mobile .modal-content { border-radius: 28px 28px 0 0 !important; height: auto; max-height: 85vh; border: none; box-shadow: 0 -10px 40px rgba(0,0,0,0.2) !important; }
+    .pb-safe { padding-bottom: calc(1rem + env(safe-area-inset-bottom)) !important; }
+}
+
+/* ==========================================================================
+   6. TARJETAS ANALÍTICAS GAMIFICADAS
+   ========================================================================== */
+.stat-card-app { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.stat-card-app:active { transform: scale(0.96); }
+.stat-deco-circle { position: absolute; width: 120px; height: 120px; border-radius: 50%; top: -40px; right: -40px; z-index: 0; }
+.stat-number-pop { animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; opacity: 0; transform: scale(0.5); }
+@keyframes popIn { to { opacity: 1; transform: scale(1); } }
+.omni-circular-chart { filter: drop-shadow(0 6px 8px rgba(0,0,0,0.06)); transform: rotate(-90deg); }
+
+/* Acordeón Gamificado por Materias */
+.app-subject-card { transition: box-shadow 0.3s; border-left: 4px solid transparent; }
+.app-subject-card:focus-within { box-shadow: var(--shadow-2xl) !important; border-left-color: var(--color-primary-candy); }
+.subject-app-icon { width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+.omni-accordion-trigger[aria-expanded="true"] .collapse-icon-app { transform: rotate(180deg); background: var(--color-primary-candy); color: white; border-color: var(--color-primary-candy) !important;}
+.omni-accordion-trigger[aria-expanded="true"] .collapse-icon-app i { color: white !important; }
+.collapse-icon-app { width: 34px; height: 34px; border-radius: 50%; background: #f8fafc; display: flex; align-items: center; justify-content: center; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.dashed-top { border-top: 2px dashed #e2e8f0 !important; }
+
+/* ==========================================================================
+   7. SIMULADOR CYBER-DECK (IFRAME SECURE)
+   ========================================================================== */
+.app-simulator-frame { border: 2px solid var(--color-dark-omni) !important; }
+.simulator-topbar { border-bottom: 1px solid rgba(6, 182, 212, 0.2); }
+.simulator-lens { transition: opacity 0.8s ease; opacity: 0; } .simulator-lens.loaded { opacity: 1; }
+.btn-action-app { width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; transition: all 0.2s; backdrop-filter: blur(4px); }
+.btn-action-app.maximize:hover { background: var(--color-warning-candy); transform: scale(1.1); }
+.btn-action-app.close:hover { background: var(--color-danger-candy); transform: scale(1.1); box-shadow: var(--shadow-glow-danger); }
+
+/* SVG Gamified Loader */
+.quantum-spinner-v2 { position: relative; width: 120px; height: 120px; }
+.spinner-svg { width: 100%; height: 100%; animation: rotate-svg 2s linear infinite; }
+.spinner-svg .track { fill: none; stroke: rgba(6, 182, 212, 0.1); stroke-width: 4; }
+.spinner-svg .indicator { fill: none; stroke: var(--color-cyan); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 100 200; stroke-dashoffset: 0; animation: dash-svg 1.5s ease-in-out infinite; }
+@keyframes rotate-svg { 100% { transform: rotate(360deg); } }
+@keyframes dash-svg { 0% { stroke-dasharray: 1, 200; stroke-dashoffset: 0; } 50% { stroke-dasharray: 89, 200; stroke-dashoffset: -35px; } 100% { stroke-dasharray: 89, 200; stroke-dashoffset: -124px; } }
+
+/* ==========================================================================
+   8. ANIMACIONES Y EFECTOS DE FONDO GENERATIVOS
+   ========================================================================== */
+/* Backgrounds Mesh / Aurora */
+.hologram-mesh-bg { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; z-index: 1; background: radial-gradient(circle at center, rgba(99,102,241,0.06) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(168,85,247,0.06) 0%, transparent 40%); animation: rotateMesh 45s linear infinite; pointer-events: none; }
+@keyframes rotateMesh { 100% { transform: rotate(360deg); } }
+.dynamic-blob { position: absolute; filter: blur(50px); z-index: 0; opacity: 0.5; border-radius: 50%; animation: floatBlob 10s ease-in-out infinite alternate; }
+.blob-primary { width: 180px; height: 180px; background: var(--color-primary-candy); top: -40px; left: -40px; }
+.blob-accent { width: 150px; height: 150px; background: var(--color-accent-candy); bottom: -40px; right: -40px; animation-delay: -5s; }
+@keyframes floatBlob { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 30px) scale(1.1); } }
+.noise-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E"); z-index: 1; pointer-events: none; mix-blend-mode: multiply; }
+
+/* Micro-interacciones Hover */
+.group-hover-target:hover .group-hover-spin { animation: spin 2s linear infinite; }
+.group-hover-target:hover .group-hover-bounce { animation: bounce 1s infinite; }
+.group-hover-target:hover .group-hover-pulse { animation: pulse 1s infinite; }
+.group-hover-target:hover .group-hover-heartbeat { animation: heartbeat 1.5s infinite; }
+.float-hover { animation: floatY 6s ease-in-out infinite; }
+@keyframes floatY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+@keyframes heartbeat { 0%, 100% { transform: scale(1); } 14% { transform: scale(1.2); } 28% { transform: scale(1); } 42% { transform: scale(1.2); } 70% { transform: scale(1); } }
+.pulse-text { animation: pulseOpacity 1.5s infinite; }
+@keyframes pulseOpacity { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.pulse-ring-animation { animation: fabPulse 2s infinite; }
+@keyframes fabPulse { 0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.6); } 70% { box-shadow: 0 0 0 15px rgba(168, 85, 247, 0); } 100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); } }
+
+/* Scrollbars Ligeros */
+.custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(15, 23, 42, 0.1); border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(15, 23, 42, 0.2); }
+
+/* Observer Animaciones Lazy Load */
+.stagger-item { opacity: 0; transform: translateY(25px); transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.stagger-item.is-visible { opacity: 1; transform: translateY(0); }
+</style>
+
+<script>
+/**
+ * ==============================================================================
+ * 🧠 MOTOR DE INFERENCIA, RENDERIZADO ASÍNCRONO Y SPA (SILICON VALLEY V8)
+ * ==============================================================================
+ * Desarrollado con directrices limpias, sin minificar para absoluta transparencia.
+ * Implementa Lazy Loading de Canvas, Intersection Observers y Garbage Collection
+ * manual para el simulador asegurando cero fugas de memoria en dispositivos móviles.
+ */
+
+const LMS_APP_ENGINE = (function() {
+    
+    // --------------------------------------------------------------------------
+    // 1. CONFIGURACIÓN CENTRAL Y CONSTANTES DEL SISTEMA
+    // --------------------------------------------------------------------------
+    const SYS_CONFIG = {
+        // URL segura que se inyectará en el iframe (Aislado del backend principal)
+        SIMULATOR_SECURE_URI: "https://games-nine-theta.vercel.app/?_vercel_share=st6osjwHUvuEnjFeAKxrfnQuCMj2nt29",
+        
+        // Paleta de colores para inyectar en Canvas (Chart.js)
+        PALETTE: {
+            primary: '#6366f1',  // Indigo
+            accent: '#a855f7',   // Purple
+            success: '#10b981',  // Emerald
+            successLight: '#34d399',
+            danger: '#f43f5e',   // Rose
+            dangerLight: '#fb7185',
+            warning: '#f59e0b',  // Amber
+            cyan: '#0ea5e9',     // Ocean
+            textCore: '#0f172a',
+            textMuted: '#64748b',
+            gridLines: 'rgba(15, 23, 42, 0.04)'
+        },
+        
+        // Tipografía para Canvas
+        FONTS: {
+            sans: "'Nunito', sans-serif",
+            mono: "'JetBrains Mono', monospace"
+        }
+    };
+    
+    // Almacenamiento en memoria para instancias de gráficos y contexto IA
+    let activeCharts = {};
+    let sessionNeuralMemory = [];
+
+    // --------------------------------------------------------------------------
+    // 2. HERRAMIENTAS GRÁFICAS Y UTILIDADES MATEMÁTICAS
+    // --------------------------------------------------------------------------
+    const GraphicalTools = {
+        /**
+         * Convierte código Hexadecimal a RGBA para gradientes dinámicos
+         */
+        hexToRgba: function(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        },
+        
+        /**
+         * Crea un gradiente lineal de desvanecimiento (Fading) para gráficos de línea o barras
+         */
+        buildGlowGradient: function(canvasCtx, startColorHex, endColorHex, gradientHeight = 350) {
+            const gradient = canvasCtx.createLinearGradient(0, 0, 0, gradientHeight);
+            gradient.addColorStop(0, GraphicalTools.hexToRgba(startColorHex, 0.65));
+            gradient.addColorStop(1, GraphicalTools.hexToRgba(endColorHex || startColorHex, 0.02));
+            return gradient;
+        },
+        
+        /**
+         * Crea el gradiente específico para barras de aprobación/riesgo
+         */
+        buildStateBarGradient: function(canvasCtx, isSuccessState) {
+            const gradient = canvasCtx.createLinearGradient(0, 0, 0, 250);
+            if (isSuccessState) {
+                gradient.addColorStop(0, SYS_CONFIG.PALETTE.successLight);
+                gradient.addColorStop(1, SYS_CONFIG.PALETTE.success);
+            } else {
+                gradient.addColorStop(0, SYS_CONFIG.PALETTE.dangerLight);
+                gradient.addColorStop(1, SYS_CONFIG.PALETTE.danger);
+            }
+            return gradient;
+        }
+    };
+
+    // --------------------------------------------------------------------------
+    // 3. MOTOR DE RENDERIZADO DE GRÁFICOS (WRAPPERS CHART.JS)
+    // --------------------------------------------------------------------------
+    const VisualDataEngine = {
+        
+        // Configura defaults globales para evitar repetición en código
+        initializeGlobalDefaults: function() {
+            Chart.defaults.font.family = SYS_CONFIG.FONTS.sans;
+            Chart.defaults.color = SYS_CONFIG.PALETTE.textMuted;
+            
+            // Tooltips estilo Gamified App
+            Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.95)';
+            Chart.defaults.plugins.tooltip.padding = 12;
+            Chart.defaults.plugins.tooltip.cornerRadius = 16;
+            Chart.defaults.plugins.tooltip.titleFont = { family: SYS_CONFIG.FONTS.sans, size: 14, weight: '900' };
+            Chart.defaults.plugins.tooltip.bodyFont = { family: SYS_CONFIG.FONTS.mono, size: 12, weight: '700' };
+            Chart.defaults.plugins.tooltip.displayColors = false;
+        },
+
+        // Renderiza el gráfico de dona (Balance Operativo)
+        renderDonutChart: function(canvasElementId, rawJsonData) {
+            const canvasElement = document.getElementById(canvasElementId);
+            if (!canvasElement || activeCharts[canvasElementId]) return;
+            
+            const parsedData = JSON.parse(rawJsonData || "[0,0]");
+            
+            activeCharts[canvasElementId] = new Chart(canvasElement.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Misiones Dominadas', 'Misiones en Riesgo'],
+                    datasets: [{
+                        data: parsedData,
+                        backgroundColor: [SYS_CONFIG.PALETTE.success, SYS_CONFIG.PALETTE.danger],
+                        borderWidth: 0,
+                        hoverOffset: 6,
+                        hoverBackgroundColor: [SYS_CONFIG.PALETTE.successLight, SYS_CONFIG.PALETTE.dangerLight]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '78%', // Dona delgada estilo Apple Watch
+                    plugins: { legend: { display: false } },
+                    animation: { animateScale: true, animateRotate: true, duration: 1200, easing: 'easeOutBounce' }
+                }
+            });
+        },
+
+        // Renderiza gráficos de barras transversales
+        renderBarChart: function(canvasElementId, rawLabelsJson, rawDataJson) {
+            const canvasElement = document.getElementById(canvasElementId);
+            if (!canvasElement || activeCharts[canvasElementId]) return;
+            
+            const parsedLabels = JSON.parse(rawLabelsJson || "[]");
+            const parsedData = JSON.parse(rawDataJson || "[]");
+            
+            if (parsedData.length === 0) return;
+            
+            const context2D = canvasElement.getContext('2d');
+            const dynamicBackgrounds = parsedData.map(value => 
+                GraphicalTools.buildStateBarGradient(context2D, value >= 3.0)
+            );
+
+            activeCharts[canvasElementId] = new Chart(context2D, {
+                type: 'bar',
+                data: {
+                    labels: parsedLabels,
+                    datasets: [{
+                        label: 'Score Alcanzado',
+                        data: parsedData,
+                        backgroundColor: dynamicBackgrounds,
+                        borderRadius: 8, // Bordes redondeados en las barras
+                        borderSkipped: false,
+                        maxBarThickness: 36
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            min: 0, max: 5, 
+                            grid: { color: SYS_CONFIG.PALETTE.gridLines, drawBorder: false },
+                            ticks: { font: { family: SYS_CONFIG.FONTS.mono, size: 10, weight: '700' } }
+                        },
+                        x: { 
+                            grid: { display: false, drawBorder: false },
+                            ticks: { font: { weight: '800', size: 10 }, color: SYS_CONFIG.PALETTE.textCore }
+                        }
+                    },
+                    plugins: { legend: { display: false } },
+                    animation: { y: { duration: 1500, easing: 'easeOutElastic' } }
+                }
+            });
+        },
+
+        // Renderiza la matriz global multicapa (Gráfico de líneas)
+        renderGlobalMatrixLineChart: function() {
+            const dataContainer = document.getElementById('globalChartData');
+            const canvasElement = document.getElementById('progresoAcademicoChart');
+            
+            if (!dataContainer || !canvasElement || activeCharts['progresoAcademicoChart']) return;
+
+            try {
+                // Parseo seguro remplazando el 'None' de Python por 'null' de JS
+                const parsedLabels = JSON.parse(dataContainer.dataset.periodos.replace(/None/g, 'null'));
+                const parsedSeriesData = JSON.parse(dataContainer.dataset.promedios.replace(/None/g, 'null'));
+                
+                const context2D = canvasElement.getContext('2d');
+                const linePalette = [
+                    SYS_CONFIG.PALETTE.primary, SYS_CONFIG.PALETTE.cyan, 
+                    SYS_CONFIG.PALETTE.accent, SYS_CONFIG.PALETTE.warning, 
+                    SYS_CONFIG.PALETTE.danger
+                ];
+
+                const buildDatasets = parsedSeriesData.map((serie, index) => {
+                    const colorDef = linePalette[index % linePalette.length];
+                    return {
+                        label: serie.materia,
+                        data: serie.datos,
+                        borderColor: colorDef,
+                        backgroundColor: GraphicalTools.buildGlowGradient(context2D, colorDef, colorDef, 280),
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.45, // Suavizado de curvas Bézier
+                        pointRadius: 0, // Puntos ocultos hasta el hover
+                        pointHoverRadius: 8,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: colorDef,
+                        pointBorderWidth: 3,
+                        hitRadius: 25 // Área de hover aumentada para pantallas táctiles
+                    };
+                });
+
+                activeCharts['progresoAcademicoChart'] = new Chart(context2D, {
+                    type: 'line',
+                    data: { labels: parsedLabels, datasets: buildDatasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            y: {
+                                min: 0, max: 5.5, // 5.5 da espacio visual arriba
+                                grid: { color: SYS_CONFIG.PALETTE.gridLines, drawBorder: false },
+                                ticks: { font: { family: SYS_CONFIG.FONTS.mono, size: 11, weight: '700' } },
+                                afterBuildTicks: function(scale) {
+                                    // Línea base de aprobación requerida
+                                    scale.ticks.push({ value: 3.0, label: 'BASE' });
+                                }
+                            },
+                            x: {
+                                grid: { display: false, drawBorder: false },
+                                ticks: { font: { weight: '800', size: 11 }, color: SYS_CONFIG.PALETTE.textMuted }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                align: 'start',
+                                labels: { usePointStyle: true, boxWidth: 8, padding: 15, font: { size: 11, weight: '800' } }
+                            }
+                        },
+                        animation: { duration: 1800, easing: 'easeOutQuart' }
+                    }
+                });
+            } catch (error) {
+                console.error("Global Matrix Rendering Fault:", error);
+            }
+        },
+
+        // Lazy Rendering para Acordeones (Evita colgar la página al cargar)
+        lazyRenderAccordionInnerCharts: function(accordionCollapseElement) {
+            const chartContainers = accordionCollapseElement.querySelectorAll('.chart-data');
+            
+            chartContainers.forEach(container => {
+                const canvasId = `chart-${container.dataset.materiaId}-${container.dataset.periodoId}`;
+                
+                // Si el gráfico ya fue pintado, abortamos
+                if (activeCharts[canvasId]) return;
+
+                // Extraemos y sanitizamos los labels y valores inyectados por Django
+                const rawLabels = container.querySelector('.chart-labels').textContent;
+                const labelsArray = rawLabels.replace(/ /g, '').split(',').filter(l => l.trim() !== '');
+                
+                const rawValues = container.querySelector('.chart-data-values').textContent;
+                const valuesArray = rawValues.split(',')
+                    .map(val => {
+                        const trimmed = val.trim();
+                        return (trimmed === 'None' || trimmed === 'null' || trimmed === '') ? null : parseFloat(trimmed);
+                    })
+                    .filter(val => val !== null && !isNaN(val));
+
+                if (valuesArray.length === 0) return;
+
+                const canvasContext = document.getElementById(canvasId).getContext('2d');
+                const dynamicGradients = valuesArray.map(val => 
+                    GraphicalTools.buildStateBarGradient(canvasContext, val >= 3.0)
+                );
+
+                activeCharts[canvasId] = new Chart(canvasContext, {
+                    type: 'bar',
+                    data: {
+                        labels: labelsArray,
+                        datasets: [{
+                            data: valuesArray,
+                            backgroundColor: dynamicGradients,
+                            borderRadius: 6,
+                            maxBarThickness: 28
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: {
+                            y: { max: 5, display: false }, // Ocultamos el eje Y para una UI más limpia tipo App
+                            x: { grid: { display: false }, ticks: { font: { size: 9, weight: '700' } } }
+                        },
+                        plugins: { legend: { display: false } },
+                        animation: { duration: 800, easing: 'easeOutQuad' }
+                    }
+                });
+            });
+        }
+    };
+
+    // --------------------------------------------------------------------------
+    // 4. MOTOR DE EVENTOS Y OBSERVADORES DE INTERSECCIÓN
+    // --------------------------------------------------------------------------
+    const InteractionEngine = {
+        
+        initializeScrollObservers: function() {
+            // Observador para animar elementos y cargar gráficos cuando entran en pantalla
+            const scrollObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        
+                        // Disparar animación CSS
+                        entry.target.classList.add('is-visible');
+                        
+                        // Buscar si hay gráficos Lazy en este contenedor y renderizarlos
+                        const lazyCanvasList = entry.target.querySelectorAll('.lazy-chart');
+                        lazyCanvasList.forEach(canvas => {
+                            if (canvas.dataset.chartType === 'doughnut') {
+                                VisualDataEngine.renderDonutChart(canvas.id, canvas.dataset.chartData);
+                            }
+                            if (canvas.dataset.chartType === 'bar') {
+                                VisualDataEngine.renderBarChart(canvas.id, canvas.dataset.labels, canvas.dataset.values);
+                            }
+                        });
+
+                        // Buscar si es el contenedor del gráfico global
+                        if (entry.target.querySelector('.lazy-chart-global')) {
+                            VisualDataEngine.renderGlobalMatrixLineChart();
+                        }
+                        
+                        // Dejamos de observar una vez que ya apareció y cargó
+                        scrollObserver.unobserve(entry.target);
+                    }
+                });
+            }, { 
+                threshold: 0.1, 
+                rootMargin: "0px 0px 80px 0px" // Pre-carga 80px antes de que entre al viewport
+            });
+
+            // Asignar delays escalonados (Stagger) para un efecto cascada premium
+            document.querySelectorAll('.observe-stagger').forEach((element, index) => {
+                element.classList.add('stagger-item');
+                // Efecto cascada reiniciable por filas (módulo 4)
+                element.style.transitionDelay = `${(index % 4) * 0.1}s`;
+                scrollObserver.observe(element);
+            });
+        },
+
+        initializeAccordionEvents: function() {
+            // Escuchar cuando Bootstrap abre un acordeón
+            document.querySelectorAll('.collapse').forEach(element => {
+                element.addEventListener('shown.bs.collapse', function(event) {
+                    // Pasar el target al motor visual para que pinte los gráficos lazy
+                    VisualDataEngine.lazyRenderAccordionInnerCharts(event.target);
+                });
+            });
+        }
+    };
+
+    // --------------------------------------------------------------------------
+    // 5. NÚCLEO NEURAL (SISTEMA DE ASISTENCIA IA SOCRÁTICA)
+    // --------------------------------------------------------------------------
+    const NeuralTutorEngine = {
+        
+        /**
+         * Inyecta el HTML renderizado dentro del DOM del chat modal
+         * @param {string} entityRole - 'loading', 'user', o 'assistant'
+         * @param {string} textContent - El mensaje crudo o en markdown
+         * @param {boolean} isHtmlBypass - Flag para ignorar el parseo Markdown (usado para inyectar errores HTML)
+         */
+        injectChatUI: function(entityRole, textContent, isHtmlBypass = false) {
+            const chatContainer = document.getElementById('chatContainerInner');
+            
+            if (entityRole === 'loading') {
+                // Spinner animado personalizado tipo asistente virtual
+                chatContainer.innerHTML += `
+                    <div class="d-flex mb-3 animate__animated animate__fadeIn" id="aiLoadStateNode">
+                        <div class="avatar-nano bg-gradient-aurora text-white rounded-circle d-flex justify-content-center align-items-center me-2 shadow-sm flex-shrink-0">
+                            <i class="fas fa-robot fs-9"></i>
+                        </div>
+                        <div class="bg-white p-3 rounded-4 shadow-sm border border-light d-flex align-items-center gap-2">
+                            <div class="spinner-grow spinner-grow-sm text-primary-candy" style="width:8px; height:8px;"></div>
+                            <div class="spinner-grow spinner-grow-sm text-primary-candy" style="width:8px; height:8px; animation-delay:0.2s"></div>
+                            <div class="spinner-grow spinner-grow-sm text-primary-candy" style="width:8px; height:8px; animation-delay:0.4s"></div>
+                        </div>
+                    </div>`;
+            } 
+            else if (entityRole === 'user') {
+                // Mensaje emitido por el estudiante
+                chatContainer.innerHTML += `
+                    <div class="d-flex justify-content-end mb-3 animate__animated animate__fadeInRight">
+                        <div class="bg-dark-omni text-white p-3 rounded-4 shadow-sm font-monospace fs-8 lh-sm" style="max-width: 85%; border-top-right-radius: 4px !important;">
+                            ${textContent}
+                        </div>
+                        <div class="avatar-nano bg-white text-dark-omni fw-black rounded-circle d-flex justify-content-center align-items-center ms-2 shadow-sm border border-light fs-9 flex-shrink-0">TU</div>
+                    </div>`;
+            } 
+            else {
+                // Respuesta de la IA con parseo de Markdown
+                const finalRenderedText = isHtmlBypass ? textContent : marked.parse(textContent);
+                chatContainer.innerHTML += `
+                    <div class="d-flex mb-4 animate__animated animate__fadeInUp">
+                        <div class="avatar-nano bg-gradient-aurora text-white rounded-circle d-flex justify-content-center align-items-center me-3 shadow-sm flex-shrink-0 position-relative">
+                            <i class="fas fa-robot fs-9"></i>
+                        </div>
+                        <div class="bg-white border border-light p-3 p-md-4 rounded-4 shadow-sm" style="max-width: 88%; border-top-left-radius: 4px !important;">
+                            <div class="markdown-body text-dark-omni fs-8 lh-base">
+                                ${finalRenderedText}
+                            </div>
+                        </div>
+                    </div>`;
+            }
+            
+            // Auto-scroll al fondo del contenedor usando smooth behavior
+            const scrollableBody = document.getElementById('modalBodyIA');
+            scrollableBody.scrollTo({ top: scrollableBody.scrollHeight, behavior: 'smooth' });
+        },
+
+        // Remueve el loader del DOM cuando llega la respuesta
+        destroyLoadingState: function() { 
+            const loaderNode = document.getElementById('aiLoadStateNode'); 
+            if (loaderNode) loaderNode.remove(); 
+        },
+
+        // Petición asíncrona robusta al endpoint de Django (Agent IA)
+        dispatchNetworkRequest: async function(actionType, userQuery, extraParams = {}) {
+            try {
+                // Incorporar el token CSRF requerido por Django
+                const csrfTokenElement = document.querySelector('[name=csrfmiddlewaretoken]');
+                // Fallback directo a la template tag de django
+                const rawToken = '{{ csrf_token }}'; 
+                
+                const requestPayload = {
+                    action_type: actionType,
+                    query: userQuery,
+                    params: extraParams,
+                    historial: sessionNeuralMemory // Envío de contexto conversacional
+                };
+
+                const networkResponse = await fetch("{% url 'api_ai_agent' %}", {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'X-CSRFToken': rawToken 
+                    },
+                    body: JSON.stringify(requestPayload)
+                });
+                
+                return await networkResponse.json();
+            } catch (networkError) {
+                console.error("AI Node Uplink Disconnected:", networkError);
+                return { 
+                    success: false, 
+                    content: "Falla crítica en la comunicación con el núcleo del servidor. Verifique conectividad local." 
+                };
+            }
+        }
+    };
+
+    // --------------------------------------------------------------------------
+    // 6. CONTROLADOR DE VISTA PÚBLICA (MÉTODOS EXPUESTOS AL DOM)
+    // --------------------------------------------------------------------------
+    return {
+        
+        /**
+         * Inicialización del ciclo de vida (On DOMContentLoaded)
+         */
+        systemBoot: function() {
+            // Inicializar configuración y observadores
+            VisualDataEngine.initializeGlobalDefaults();
+            InteractionEngine.initializeScrollObservers();
+            InteractionEngine.initializeAccordionEvents();
+            
+            // Vincular el evento "Enter" del teclado al input del chat IA
+            const chatInputElement = document.getElementById('chatInputUser');
+            if (chatInputElement) {
+                chatInputElement.addEventListener('keypress', function(event) { 
+                    if (event.key === 'Enter') {
+                        event.preventDefault(); // Evitar comportamientos por defecto
+                        window.enviarRespuestaChat(); 
+                    }
+                });
+            }
+        },
+
+        /**
+         * Gestión arquitectónica del Sandbox del Simulador
+         * Se maneja la inyección asíncrona de SRC y Hard-Garbage Collection para liberar RAM
+         */
+        toggleSimulatorInstance: function() {
+            const wrapperNode = document.getElementById('wrapperSimulador');
+            const iframeNode = document.getElementById('iframeSimulador');
+            const loaderNode = document.getElementById('simLoader');
+            
+            if (wrapperNode.classList.contains('d-none')) {
+                // FASE DE ARRANQUE: Mostrar contenedor y lanzar animación
+                wrapperNode.classList.remove('d-none');
+                wrapperNode.classList.add('animate__animated', 'animate__zoomIn');
+                loaderNode.classList.remove('d-none');
+                
+                // Inyectar URL al iframe de manera asíncrona para no bloquear el hilo de UI
+                setTimeout(() => { 
+                    iframeNode.src = SYS_CONFIG.SIMULATOR_SECURE_URI; 
+                    
+                    // Escuchar cuando el Vercel termine de cargar para hacer Fade del loader
+                    iframeNode.onload = function() {
+                        setTimeout(() => {
+                            loaderNode.classList.add('animate__animated', 'animate__fadeOut');
+                            setTimeout(() => {
+                                loaderNode.classList.add('d-none');
+                                loaderNode.classList.remove('animate__animated', 'animate__fadeOut');
+                                iframeNode.classList.add('loaded'); // Activa opacity:1 en CSS
+                            }, 500);
+                        }, 800); // Pequeño delay extra de UX
+                    };
+                }, 300); 
+                
+                // Hacer scroll fluido hasta la consola
+                setTimeout(() => {
+                    wrapperNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+                
+            } else {
+                // FASE DE DESTRUCCIÓN: Animación de salida y limpieza de memoria
+                wrapperNode.classList.replace('animate__zoomIn', 'animate__zoomOut');
+                
+                setTimeout(() => {
+                    wrapperNode.classList.add('d-none');
+                    wrapperNode.classList.remove('animate__animated', 'animate__zoomOut');
+                    iframeNode.classList.remove('loaded');
+                    
+                    // HARD GARBAGE COLLECTION: Matar la instancia del iframe removiendo el SRC
+                    iframeNode.removeAttribute('src'); 
+                    
+                }, 500); // Mismo tiempo que la duración de la animación zoomOut
+            }
+        },
+
+        /**
+         * Permite llevar el iframe de Vercel a pantalla completa utilizando API Nativa del browser
+         */
+        requestNativeFullscreen: function() {
+            const iframeElement = document.getElementById('iframeSimulador');
+            if (!iframeElement) return;
+            
+            if (iframeElement.requestFullscreen) {
+                iframeElement.requestFullscreen();
+            } else if (iframeElement.webkitRequestFullscreen) { /* Safari */
+                iframeElement.webkitRequestFullscreen();
+            } else if (iframeElement.msRequestFullscreen) { /* IE11 */
+                iframeElement.msRequestFullscreen();
+            }
+        },
+
+        /**
+         * Controlador de inicio de chat (Acciones automáticas)
+         */
+        triggerSystemAI: async function(actionCode, initialPromptText) {
+            const bootstrapModal = new bootstrap.Modal(document.getElementById('modalIA'));
+            const chatInnerBody = document.getElementById('chatContainerInner');
+            
+            // Si es un comando de acción (Botones rápidos), limpiar memoria y pantalla
+            if (actionCode) {
+                sessionNeuralMemory = [];
+                chatInnerBody.innerHTML = '';
+                NeuralTutorEngine.injectChatUI('loading');
+            }
+            
+            bootstrapModal.show();
+            
+            // Petición bloqueante al backend
+            const responseData = await NeuralTutorEngine.dispatchNetworkRequest(actionCode, initialPromptText);
+            
+            NeuralTutorEngine.destroyLoadingState();
+
+            if (responseData.success) {
+                // Guardar en la memoria local el hilo
+                if (initialPromptText) {
+                    sessionNeuralMemory.push({ role: "user", content: initialPromptText });
+                }
+                sessionNeuralMemory.push({ role: "assistant", content: responseData.content });
+                
+                // Pintar la respuesta
+                NeuralTutorEngine.injectChatUI('assistant', responseData.content);
+            } else {
+                // Manejo de excepciones visuales
+                NeuralTutorEngine.injectChatUI('assistant', `<span class="text-danger fw-bold"><i class="fas fa-bug me-2"></i>Fallo en subsistema: ${responseData.content}</span>`, true);
+            }
+        },
+
+        /**
+         * Controlador de chat de entrada de usuario manual (Input)
+         */
+        handleManualUserChat: async function() {
+            const inputElement = document.getElementById('chatInputUser');
+            const userString = inputElement.value.trim();
+            
+            if (!userString) return;
+
+            // Render Optimista (Pintar en UI inmediatamente)
+            NeuralTutorEngine.injectChatUI('user', userString);
+            inputElement.value = ''; 
+            
+            // Poner loader IA
+            NeuralTutorEngine.injectChatUI('loading');
+
+            // Enviar petición (Sin actionType, se asume continuación de chat libre)
+            const responseData = await NeuralTutorEngine.dispatchNetworkRequest(null, userString);
+            
+            NeuralTutorEngine.destroyLoadingState();
+
+            if (responseData.success) {
+                sessionNeuralMemory.push({ role: "user", content: userString });
+                sessionNeuralMemory.push({ role: "assistant", content: responseData.content });
+                NeuralTutorEngine.injectChatUI('assistant', responseData.content);
+            } else {
+                NeuralTutorEngine.injectChatUI('assistant', `<span class="text-danger fw-bold"><i class="fas fa-wifi me-2"></i>Avería de transmisión en túnel principal.</span>`, true);
+            }
+        }
+    };
+})();
+
+// ==============================================================================
+// REGISTRO DE EVENTOS GLOBALES (BINDING AL DOM)
+// ==============================================================================
+
+// Al terminar de cargar el DOM, iniciar Motor Core
+document.addEventListener('DOMContentLoaded', LMS_APP_ENGINE.systemBoot);
+
+// Mapeo de ventanas al objeto Global (Window) requerido por onClick HTML crudo
+window.toggleSimulador = LMS_APP_ENGINE.toggleSimulatorInstance;
+window.fullScreenSim = LMS_APP_ENGINE.requestNativeFullscreen;
+
+// Wrappers para llamar al Core IA
+window.activarIA = function(codigoAccion) { 
+    LMS_APP_ENGINE.triggerSystemAI(codigoAccion, ""); 
+};
+window.enviarRespuestaChat = LMS_APP_ENGINE.handleManualUserChat;
+
+// Controladores específicos para Modal Pareto 80/20
+window.abrirModalPareto = function() { 
+    new bootstrap.Modal(document.getElementById('modalParetoInput')).show(); 
+};
+window.ejecutarPareto = function() {
+    const inputElement = document.getElementById('inputParetoTema');
+    const valorTema = inputElement.value.trim();
+    
+    // Validación visual de error
+    if (!valorTema) { 
+        inputElement.classList.add('is-invalid', 'animate__animated', 'animate__shakeX'); 
+        setTimeout(() => {
+            inputElement.classList.remove('is-invalid', 'animate__animated', 'animate__shakeX');
+        }, 1000); 
+        return; 
+    }
+    
+    // Cerrar modal local y abrir modal IA
+    bootstrap.Modal.getInstance(document.getElementById('modalParetoInput')).hide();
+    
+    // Disparar acción Pareto
+    LMS_APP_ENGINE.triggerSystemAI('est_pareto', valorTema);
+    
+    // Limpiar input tras envío
+    inputElement.value = '';
+};
+</script>
+{% endblock %}
