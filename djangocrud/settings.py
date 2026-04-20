@@ -230,7 +230,7 @@ else:
         }
 
 CSRF_TRUSTED_ORIGINS = [
-        "https://web-production-707fc.up.railway.app",
+        "https://web-production-e3cbe.up.railway.app",
     ]
 
 # settings.py
